@@ -1,3 +1,4 @@
+import fs from 'fs'
 import path from 'path'
 
 import fg, { type Options as FastGlobOptions } from 'fast-glob'
@@ -141,6 +142,13 @@ export const isCellFile = (p: string) => {
     return false
   }
 
+  // The file may already be gone (e.g. a watcher's `unlink` event fires
+  // after deletion). We can't parse a deleted file, so trust the
+  // path-based checks above instead of crashing with ENOENT.
+  if (!fs.existsSync(p)) {
+    return true
+  }
+
   const ast = fileToAst(p)
 
   // A Cell should not have a default export.
@@ -180,6 +188,13 @@ export const isPageFile = (p: string) => {
     return false
   }
 
+  // The file may already be gone (e.g. a watcher's `unlink` event fires
+  // after deletion). We can't parse a deleted file, so trust the
+  // path-based checks above instead of crashing with ENOENT.
+  if (!fs.existsSync(p)) {
+    return true
+  }
+
   // A Page should have a default export.
   const ast = fileToAst(p)
   if (!hasDefaultExport(ast)) {
@@ -210,6 +225,13 @@ export const isDirectoryNamedModuleFile = (p: string) => {
 export const isGraphQLSchemaFile = (p: string) => {
   if (!p.match(/\.sdl\.(ts|js)$/)?.[0]) {
     return false
+  }
+
+  // The file may already be gone (e.g. a watcher's `unlink` event fires
+  // after deletion). We can't parse a deleted file, so trust the
+  // path-based check above instead of crashing with ENOENT.
+  if (!fs.existsSync(p)) {
+    return true
   }
 
   const ast = fileToAst(p)

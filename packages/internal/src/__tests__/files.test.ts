@@ -24,6 +24,8 @@ import {
   findPages,
   isCellFile,
   isFileInsideFolder,
+  isGraphQLSchemaFile,
+  isPageFile,
 } from '../files'
 
 const cleanPaths = (p) => {
@@ -159,4 +161,42 @@ test('isCellFile detects cells correctly', () => {
   expect(invalidCell).toBe(false)
   expect(validCell).toBe(true)
   expect(notACell).toBe(false)
+})
+
+test('isCellFile treats a deleted cell as a cell (no ENOENT crash)', () => {
+  // A watcher's `unlink` event fires after the file is already gone.
+  // We can't parse a deleted file, so the path-based checks decide.
+  const deletedCell = isCellFile(
+    path.join(FIXTURE_PATH, 'web/src/components/DeletedCell/DeletedCell.tsx'),
+  )
+  const deletedNonCell = isCellFile(
+    path.join(FIXTURE_PATH, 'web/src/components/DeletedWidget/Other.tsx'),
+  )
+
+  expect(deletedCell).toBe(true)
+  expect(deletedNonCell).toBe(false)
+})
+
+test('isPageFile treats a deleted page as a page (no ENOENT crash)', () => {
+  const deletedPage = isPageFile(
+    path.join(FIXTURE_PATH, 'web/src/pages/DeletedPage/DeletedPage.tsx'),
+  )
+  const deletedNonPage = isPageFile(
+    path.join(FIXTURE_PATH, 'web/src/pages/DeletedWidget/DeletedWidget.tsx'),
+  )
+
+  expect(deletedPage).toBe(true)
+  expect(deletedNonPage).toBe(false)
+})
+
+test('isGraphQLSchemaFile treats a deleted schema as a schema (no ENOENT crash)', () => {
+  const deletedSchema = isGraphQLSchemaFile(
+    path.join(FIXTURE_PATH, 'api/src/graphql/deleted.sdl.ts'),
+  )
+  const deletedNonSchema = isGraphQLSchemaFile(
+    path.join(FIXTURE_PATH, 'api/src/graphql/deleted.ts'),
+  )
+
+  expect(deletedSchema).toBe(true)
+  expect(deletedNonSchema).toBe(false)
 })
